@@ -1,9 +1,29 @@
 doctype html
 html(lang='en')
-	head
-		meta(charset="utf-8")
-		title Untitled
+  head
+    meta(charset="utf-8")
+    link(rel="stylesheet", type="text/css", href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css")
+    title Lingo
 
-	body
-		block content
-		
+  body
+
+    nav(role="navigation").navbar.navbar-default
+      .navbar-header
+        button(type="button", data-toggle="collapse", data-target=".navbar-ex1-collapse").navbar-toggle.collapsed
+          span.sr-only Toggle navigation
+          span.icon-bar
+          span.icon-bar
+          span.icon-bar
+        a(href="#" ).navbar-brand Lingo
+      .collapse.navbar-collapse.navbar-ex1-collapse
+        ul.nav.navbar-nav
+          li: a(href="/translate") Translate
+          li: a(href="/quiz") Quiz
+          li: a(href="/progress") Progress
+
+
+    block content
+
+
+  script(type="application/javascript", src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js")
+  script(type="application/javascript", src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js")
