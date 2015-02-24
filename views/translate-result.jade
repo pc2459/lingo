@@ -1,7 +1,8 @@
 extends layout
 
 block content
+  if results.errorCode
+    h1 GO TO GOOGLE ):
   if results
     h1 #{results.translation}
-  else
-    h1 GO TO GOOGLE ):
+

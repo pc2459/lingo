@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  .container
+    form(id="languageChoice", method="post", action="/quiz")
+      label(for="chosenLanguage") Input Language
+      select(name="chosenLanguage")
+        for language in languages
+          option(value="#{language.code}") #{language.name}
+      input(type="submit")

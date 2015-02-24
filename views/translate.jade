@@ -5,13 +5,11 @@ block content
     form(id="translate", method="post", action="/get-translation")
       label(for="fromlanguage") Input Language
       select(name="fromlanguage")
-        for language in fromLangs
-          option(value="#{language}") #{language}
+        for language in languages
+          option(value="#{language.code}") #{language.name}
       label(for="targetlanguage") Target Language
       select(name="targetlanguage")
-        for language in toLangs
-          option(value="#{language}") #{language}
+        for language in languages
+          option(value="#{language.code}") #{language.name}
       input(type="text", name="word", placeholder="Word to translate...")
       input(type="submit")
-    if result
-      h3=result.translation

@@ -1,10 +1,5 @@
 var _ = require('underscore');
-var BeGlobal = require('node-beglobal');
-
-//initialize the BeGlobal API
-var beglobal = new BeGlobal.BeglobalAPI({
-  api_token: '3zbqkhNwTlNJUohrcqX4uw%3D%3D'
-});
+var model = require('../models/hugemodel.js');
 
 
 var indexController = {
@@ -14,91 +9,64 @@ var indexController = {
 
   translate: function(req,res){
 
-
-    // Pull down a list of all languages
-    beglobal.languages.all(function(err,result){
-      if (err) console.error(err);
-
-
-      // Pull all from languages that are unique
-      var fromLangs = _.chain(result)
-          .pluck('from')
-          .pluck('name')
-          .uniq()
-          .sortBy(function(lang){ return lang;})
-          .value();
-
-      // Pull all to languages that are unique
-      var toLangs = _.chain(result)
-          .pluck('to')
-          .pluck('name')
-          .uniq()
-          .sortBy(function(lang){ return lang;})
-          .value();
-
-
-      // Pass it to Jade
-      res.render('translate', { fromLangs : fromLangs,
-                                toLangs : toLangs } );
+    model.getLangCodes(function(languages){
+      res.render('translate', { languages : languages } );
     });
-
 
   },
 
   getTranslation: function(req,res){
 
     var request = req.body;
-    console.log("THE REQUEST BODY:", request);
 
-    beglobal.languages.all(function(err,result){
+    model.getTranslation(request.word, request.fromlanguage, request.targetlanguage,
+      function(err, results){
+        if (err){ console.log(err); }
+        res.render('translate-result', {results: results});
+    });
+  },
 
-      // Look up the code of the from language
+  chooseQuizLang: function(req, res){
 
-      var fromLang = _.chain(result)
-                      .pluck('from')
-                      .find(function(lang){
-                        // console.log(request.fromlanguage);
-                        return lang.name === request.fromlanguage; })
-                      // .pluck('code')
-                      .value();
+    model.getLangCodes(function(languages){
+      // console.log(languages);
+      res.render('init-quiz', { languages : languages } );
+    });
 
-      console.log(fromLang.code);
+  },
 
+  startQuiz: function(req, res){
+    //get the language
+    request = req.body;
 
-      // Look up the code of the to language
+    //pluck 10 words from a database of random words, saving their translations
+    //in the form {word: string, translation: string}
+    var randomWords = [];
 
-      var toLang = _.chain(result)
-                      .pluck('to')
-                      .find(function(lang){
-                        // console.log(request.fromlanguage);
-                        return lang.name === request.targetlanguage; })
-                      // .pluck('code')
-                      .value();
+    _.each(_.range(10), function(){
 
+      var rand = Math.floor(Math.random() * 500);
+      model.Word.findOne().skip(rand).exec(function(err, result){
+        if(err) console.err(err);
 
-      console.log(fromLang.code, toLang.code);
-
-      beglobal.translations.translate(
-
-        {text: request.word, from: fromLang.code, to: toLang.code},
-        function(err, results) {
-          if (err) {
-            console.log(err);
-            res.render('translate-result');
-          }
-
-          console.log(results);
-          res.render('translate-result', {results: results});
-        }
-      );
+        randomWords.push(result.word);
+        console.log(result);
+        console.log("PLEASE PLEASE WORK:",randomWords);
+      });
 
     });
 
 
 
+    //initialise a new Quiz
+    // var newQuiz = new Quiz({
+    //   questions : questionsArray
 
+    // });
 
+    // newQuiz.save();
 
+    res.redirect('quiz');
   }
 
 };
