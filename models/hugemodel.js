@@ -54,8 +54,8 @@ var userSchema = new mongoose.Schema({
   name: String,
   quizzesPassed: {type: Number, default: 0},
   quizzesFailed: {type: Number, default: 0},
-  quizzes : [Quiz],
-  vocabulary : [Word]
+  quizzes : [quizSchema],
+  vocabulary : [wordSchema]
 });
 
 var User = mongoose.model('User', userSchema);

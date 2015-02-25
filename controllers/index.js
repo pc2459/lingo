@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var model = require('../models/hugemodel.js');
 var async = require('async');
+var staticVocab = require('../models/wordList.js');
 
 
 var indexController = {
@@ -42,7 +43,8 @@ var indexController = {
 
     //pluck 10 words from a database of random words, saving their translations
     //in the form {word: string, translation: string}
-    var randomWords = model.generateVocabList();
+    // var randomWords = model.generateVocabList();
+    var randomWords = staticVocab;
 
     var asyncFunctions = randomWords.map(function(word){
       return function(onComplete){
@@ -91,8 +93,7 @@ var indexController = {
 
   answerQuiz: function(req, res){
     //the user's answer here
-    var answer = req.body.answer;
-
+    var answer = req.body.clientAnswer;
 
     model.Quiz.find().sort({ _id : -1 }).limit(1).exec(function(err, result){
       //Get the quiz object out of the returned array
@@ -104,33 +105,60 @@ var indexController = {
       //Keep track of whether the quiz is finished
       var complete = false;
 
+      var messageToUser;
+
       // Check to see if user has correct answer
       var correctAnswer = quiz.questions[quiz.questionNumber].translation;
-      var messageToUser;
+
+      console.log("User Answer:", answer);
+      console.log("Correct Answer:", correctAnswer);
+
+      // if answer is correct...
       if (answer === correctAnswer){
         messageToUser = "GOOD JOB";
 
+        // Update the quiz with an additional right
+        quiz.rights++;
+        quiz.save();
+
+        // Update the user's vocabulary list
         model.User.findOne({name: 'Goddamnit'}, function(err, user){
+          var hasWord = _.contains(user.vocabulary, function(wordObj){
+              return wordObj.word === quiz.questions[quiz.questionNumber].word;
+          });
+          // If the user has the word..
+          if (hasWord){
+            user.vocabulary = _.map(user.vocabulary, function(wordObj){
+              if(wordObj.word === quiz.questions[quiz.questionNumber].word){
+                wordObj.rights++;
+              }
+              return wordObj;
+            });
 
-          console.log(user);
+          }
+          // If this a new word...
+          else {
+            var newWord = new model.Word({word: quiz.questions[quiz.questionNumber].word, rights : 1});
+            user.vocabulary.push(newWord);
+          }
 
-          // user.save();
+          user.save();
         });
 
       }
       //if the answer was wrong, do something
       else {
 
-        model.User.findOne({name: 'Goddamnit'}, function(err, user){
+        // Update the quiz with an additional right
+        quiz.wrongs++;
+        quiz.save();
 
-          console.log("Vocabulary:", user.vocabulary);
-          //See if the word is in the vocabulary
+        model.User.findOne({name: 'Goddamnit'}, function(err, user){
           var hasWord = _.contains(user.vocabulary, function(wordObj){
               return wordObj.word === quiz.questions[quiz.questionNumber].word;
           });
           // If the user has the word..
           if (hasWord){
-
             user.vocabulary = _.map(user.vocabulary, function(wordObj){
               if(wordObj.word === quiz.questions[quiz.questionNumber].word){
                 wordObj.wrongs++;
@@ -138,30 +166,37 @@ var indexController = {
               return wordObj;
             });
 
-            console.log("Update a word in the vocab:", user.vocabulary);
-
           }
           // If this a new word...
           else {
-
-            console.log('User:',user);
             var newWord = new model.Word({word: quiz.questions[quiz.questionNumber].word, wrongs : 1});
-            console.log('New word:', newWord);
             user.vocabulary.push(newWord);
-
-            console.log("Added a new word to the vocab:", user.vocabulary);
-
           }
-
-          // user.save();
+          user.save();
         });
 
 
         messageToUser = correctAnswer;
       }
 
+      //Check if they've failed
+      if(quiz.wrongs >= 3){
+        model.User.findOneAndUpdate({name: 'Goddamnit'}, {$inc: {quizzesFailed : 1}}, function(err){
+          if(err) console.log(err);
+        });
+
+        res.send({complete: true,
+                  messageToUser : "YOU FAILED HA HA HA"});
+        return;
+      }
+
       // Check if this is the tenth question and render the appropriate information
       if(questionNumber === 9){
+
+        model.User.findOneAndUpdate({name: 'Goddamnit'}, {$inc: {quizzesPassed : 1}}, function(err){
+          if(err) console.log(err);
+        });
+
           res.send({complete: true,
                     messageToUser : messageToUser});
           return;
@@ -182,16 +217,53 @@ var indexController = {
         newQuestion : newQuestion,
         newQuestionNumber : questionNumber +1
       });
-
-
-
-
     });
 
   },
 
   progress: function(req, res){
-    res.redirect('/');
+
+    model.User.findOne({name: 'Goddamnit'}, function(err, user){
+
+      var quizzesPassed = user.quizzesPassed;
+      var quizzesFailed = user.quizzesFailed;
+      var totalQuizzes = quizzesPassed + quizzesFailed;
+      var percentPassed = quizzesPassed/(quizzesFailed+quizzesPassed) * 100;
+
+
+      var correctWords = _.filter(user.vocabulary, function(word){ return word.rights >= 1; }).length;
+      var wrongWords = _.filter(user.vocabulary, function(word){ return word.rights === 0; }).length;
+      var totalWords = user.vocabulary.length;
+      var percentWordsCorrect = correctWords/totalWords * 100;
+
+      var best10 = _.sortBy(user.vocabulary, function(word){
+        return -word.rights;
+      }).slice(0,10);
+
+      var worst10 = _.sortBy(user.vocabulary, function(word){
+        return word.wrongs;
+      }).slice(0,10);
+
+      console.log(worst10);
+
+
+      // Total number of quizzes
+      // Number of quizzes passed
+      // Number of quizzes failed
+      // % of quizzes passed
+      // Total number of words translated
+      // Number of words correctly translated
+      // Number of words incorrectly translated
+      // % of words translated correctly
+      // Best 10
+      // Worst 10
+
+      res.render('progress');
+
+
+
+    });
+
   }
 
 };
