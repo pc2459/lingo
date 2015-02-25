@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  .invisible#results
+    h1 YAY YOU EITHER PASSED OR FAILED WE DON'T KNOW YET
+
+  h3#questionNumber Question number #{questionNumber + 1}
+  h3#word #{word.word}
+  form(id="answerForm")
+    input(type="text", id="answer", name="answer", placeholder="Translate this!")
+    input(type="submit")
+
+  div#response
+

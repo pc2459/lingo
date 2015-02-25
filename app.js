@@ -20,6 +20,9 @@ app.get('/translate', indexController.translate);
 app.post('/get-translation', indexController.getTranslation);
 app.get('/quiz', indexController.chooseQuizLang);
 app.post('/quiz', indexController.startQuiz);
+app.get('/play/:langcode', indexController.playQuiz);
+app.post('/answerSubmit', indexController.answerQuiz);
+app.get('/progress', indexController.progress);
 
 
 var server = app.listen(6873, function() {

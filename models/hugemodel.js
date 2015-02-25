@@ -10,10 +10,12 @@ var beglobal = new BeGlobal.BeglobalAPI({
 
 
 var quizSchema = new mongoose.Schema({
+  timestamp: {type: Date, default: Date.now},
   wrongs: {type: Number, default: 0},
   rights: {type: Number, default: 0},
-  questionNumber: {type: Number, default: 1},
-  questions: [ {word: String, translation: String}]
+  questionNumber: {type: Number, default: 0},
+  questions: [ {word: String, translation: String} ],
+  language : String
 });
 
 var Quiz = mongoose.model('Quiz', quizSchema);
