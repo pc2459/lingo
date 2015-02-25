@@ -93,52 +93,100 @@ var indexController = {
     //the user's answer here
     var answer = req.body.answer;
 
+
     model.Quiz.find().sort({ _id : -1 }).limit(1).exec(function(err, result){
-
+      //Get the quiz object out of the returned array
       var quiz = result[0];
+      //Get the quiz ID
       var quizID = result[0]._id;
+      //Get the question number we're on
+      var questionNumber = quiz.questionNumber;
+      //Keep track of whether the quiz is finished
+      var complete = false;
 
-      console.log(quiz.questionNumber);
-
-      // Check if this is the tenth question
-      if(quiz.questionNumber === 9){
-
-        res.send({complete: true});
-        return;
-      }
-
-
+      // Check to see if user has correct answer
       var correctAnswer = quiz.questions[quiz.questionNumber].translation;
-
       var messageToUser;
       if (answer === correctAnswer){
         messageToUser = "GOOD JOB";
+
+        model.User.findOne({name: 'Goddamnit'}, function(err, user){
+
+          console.log(user);
+
+          // user.save();
+        });
+
       }
+      //if the answer was wrong, do something
       else {
+
+        model.User.findOne({name: 'Goddamnit'}, function(err, user){
+
+          console.log("Vocabulary:", user.vocabulary);
+          //See if the word is in the vocabulary
+          var hasWord = _.contains(user.vocabulary, function(wordObj){
+              return wordObj.word === quiz.questions[quiz.questionNumber].word;
+          });
+          // If the user has the word..
+          if (hasWord){
+
+            user.vocabulary = _.map(user.vocabulary, function(wordObj){
+              if(wordObj.word === quiz.questions[quiz.questionNumber].word){
+                wordObj.wrongs++;
+              }
+              return wordObj;
+            });
+
+            console.log("Update a word in the vocab:", user.vocabulary);
+
+          }
+          // If this a new word...
+          else {
+
+            console.log('User:',user);
+            var newWord = new model.Word({word: quiz.questions[quiz.questionNumber].word, wrongs : 1});
+            console.log('New word:', newWord);
+            user.vocabulary.push(newWord);
+
+            console.log("Added a new word to the vocab:", user.vocabulary);
+
+          }
+
+          // user.save();
+        });
+
+
         messageToUser = correctAnswer;
       }
 
+      // Check if this is the tenth question and render the appropriate information
+      if(questionNumber === 9){
+          res.send({complete: true,
+                    messageToUser : messageToUser});
+          return;
+      }
+
+      // Update the question number
       model.Quiz.update({_id : quizID}, {$inc: {questionNumber:1}}, function(err){
+        if(err) console.log(err);
+      });
+      questionNumber++;
 
-        model.Quiz.findOne({_id: quizID}, function(err, result){
-          var newQuestion = quiz.questions[result.questionNumber].word;
+      // Get the next question
+      var newQuestion = quiz.questions[questionNumber].word;
 
-          res.send({
-            messageToUser : messageToUser,
-            newQuestion : newQuestion,
-            newQuestionNumber : result.questionNumber +1
-          });
-
-        });
-
+      // Render
+      res.send({
+        messageToUser : messageToUser,
+        newQuestion : newQuestion,
+        newQuestionNumber : questionNumber +1
       });
 
-      // Increment the questionNumber
 
-      // Send the needed information down to the client: whether they were
-      // right or wrong; the new question number; the new question
+
+
     });
-
 
   },
 

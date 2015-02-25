@@ -51,13 +51,18 @@ var generateVocabList = function(){
 
 
 var userSchema = new mongoose.Schema({
-  quizzesPassed: Number,
-  quizzesFailed: Number,
-  currentQuiz : [Quiz],
+  name: String,
+  quizzesPassed: {type: Number, default: 0},
+  quizzesFailed: {type: Number, default: 0},
+  quizzes : [Quiz],
   vocabulary : [Word]
 });
 
 var User = mongoose.model('User', userSchema);
+
+// // Create a test user for testing
+// var newUser = new User({name: 'Goddamnit'});
+// newUser.save();
 
 var getLangCodes = function(callback){
       // Pull down a list of all languages

@@ -23,10 +23,12 @@ $(document).on('ready', function(){
       console.log('Server:', serverAnswer);
       if(serverAnswer.complete) {
         // window.location.href = '/progress'
-        $('#response').hide();
+        // $('#response').hide();
         $('#word').hide();
         $('#questionNumber').hide();
+        $('#answerForm').hide();
         $('#results').removeClass('invisible');
+        $('#response').text(serverAnswer.messageToUser);
       }
       else {
 
