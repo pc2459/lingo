@@ -61,7 +61,7 @@ var userSchema = new mongoose.Schema({
 var User = mongoose.model('User', userSchema);
 
 // // Create a test user for testing
-// var newUser = new User({name: 'Goddamnit'});
+// var newUser = new User({name: 'testuser'});
 // newUser.save();
 
 var getLangCodes = function(callback){

@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var indexController = require('./controllers/index.js');
+var quizController = require('./controllers/quiz.js');
 var mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/lingo');
@@ -18,11 +19,11 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.get('/', indexController.index);
 app.get('/translate', indexController.translate);
 app.post('/get-translation', indexController.getTranslation);
-app.get('/quiz', indexController.chooseQuizLang);
-app.post('/quiz', indexController.startQuiz);
-app.get('/play/:langcode', indexController.playQuiz);
-app.post('/answerSubmit', indexController.answerQuiz);
-app.get('/progress', indexController.progress);
+app.get('/quiz', quizController.chooseQuizLang);
+app.post('/quiz', quizController.startQuiz);
+app.get('/play/:langcode', quizController.playQuiz);
+app.post('/answerSubmit', quizController.answerQuiz);
+app.get('/progress', quizController.progress);
 
 
 var server = app.listen(6873, function() {
